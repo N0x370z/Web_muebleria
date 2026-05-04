@@ -5,7 +5,7 @@ import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js'
 import { Button } from '@/components/ui/Button'
 import { useCartStore } from '@/store/cart'
 
-export const StripePaymentForm = ({ _clientSecret, orderId, onCancel }: { _clientSecret?: string, orderId: string, onCancel: () => void }) => {
+export const StripePaymentForm = ({ orderId, onCancel }: { orderId: string, onCancel: () => void }) => {
   const stripe = useStripe()
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)

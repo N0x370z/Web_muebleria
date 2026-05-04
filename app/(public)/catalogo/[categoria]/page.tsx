@@ -46,11 +46,18 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const maxPrice = searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined
   const inStock = searchParams.inStock === 'true'
 
+  const priceFilter = 
+    minPrice !== undefined || maxPrice !== undefined
+      ? {
+          ...(minPrice !== undefined && { gte: minPrice }),
+          ...(maxPrice !== undefined && { lte: maxPrice }),
+        }
+      : undefined
+
   const where: Prisma.ProductWhereInput = {
     isActive: true,
     categoryId: category.id,
-    ...(minPrice !== undefined && { price: { gte: minPrice } }),
-    ...(maxPrice !== undefined && { price: { ...((minPrice !== undefined ? { gte: minPrice } : {})), lte: maxPrice } }),
+    ...(priceFilter && { price: priceFilter }),
     ...(inStock && { stock: { gt: 0 } }),
   }
 

@@ -16,7 +16,7 @@ const HomePage = () => {
   return (
     <>
       <HeroSection />
-      <FeaturedCategories categories={[]} />
+      <FeaturedCategories />
       <ValueProps />
     </>
   )

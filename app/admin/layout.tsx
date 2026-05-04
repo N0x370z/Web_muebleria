@@ -9,9 +9,9 @@ import {
   MessageSquare, 
   FileText, 
   Layers, 
-  LogOut,
   Home
 } from 'lucide-react'
+import { LogoutButton } from '@/components/admin/LogoutButton'
 
 const ADMIN_LINKS = [
   { href: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
@@ -69,12 +69,7 @@ export default async function AdminLayout({
             <Home size={18} />
             Ver Tienda
           </Link>
-          <button
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
-          >
-            <LogOut size={18} />
-            Cerrar Sesión
-          </button>
+          <LogoutButton />
         </div>
       </aside>
 

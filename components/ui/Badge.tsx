@@ -1,6 +1,6 @@
 // ── Tipos ──────────────────────────────────────────────────────────
 
-type BadgeVariant = 'gold' | 'dark' | 'outline' | 'success' | 'danger'
+type BadgeVariant = 'gold' | 'dark' | 'outline' | 'success' | 'danger' | 'warning' | 'info'
 
 export interface BadgeProps {
   variant?: BadgeVariant
@@ -16,6 +16,8 @@ const variantStyles: Record<BadgeVariant, string> = {
   outline: 'badge-outline',
   success: 'badge bg-emerald-600 text-white',
   danger: 'badge bg-red-600 text-white',
+  warning: 'badge bg-yellow-500 text-white',
+  info: 'badge bg-blue-500 text-white',
 }
 
 // ── Componente ─────────────────────────────────────────────────────

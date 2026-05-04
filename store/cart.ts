@@ -33,8 +33,6 @@ interface CartState {
 
 // ── Implementación ─────────────────────────────────────────────────
 
-const getItemKey = (productId: string, variantId?: string) =>
-  variantId ? `${productId}-${variantId}` : productId
 
 export const useCartStore = create<CartState>()(
   persist(
