@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
+import { ImagePlaceholder } from '@/components/ui/ImagePlaceholder'
 
 // ── Tipos ──────────────────────────────────────────────────────────
 
@@ -11,7 +12,7 @@ interface Category {
   slug: string
   name: string
   description: string
-  imageUrl: string
+  imageUrl?: string | null
   count?: number
 }
 
@@ -123,15 +124,19 @@ const FeaturedCategories = ({
                            focus-visible:ring-dorado-suave"
                 aria-label={`Ver categoría ${category.name}`}
               >
-                {/* Imagen */}
-                <Image
-                  src={category.imageUrl}
-                  alt={`Colección de ${category.name}`}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover transition-transform duration-700
-                             group-hover:scale-105"
-                />
+                {/* Imagen o Placeholder */}
+                {category.imageUrl ? (
+                  <Image
+                    src={category.imageUrl}
+                    alt={`Colección de ${category.name}`}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover transition-transform duration-700
+                               group-hover:scale-105"
+                  />
+                ) : (
+                  <ImagePlaceholder aspectRatio="4/5" label={`Colección de ${category.name}`} className="absolute inset-0 h-full transition-transform duration-700 group-hover:scale-105" />
+                )}
 
                 {/* Overlay */}
                 <div

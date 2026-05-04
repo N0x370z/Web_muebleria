@@ -5,6 +5,7 @@ import { ChevronRight } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { AddToCartButton } from '@/components/product/AddToCartButton'
 import { Badge } from '@/components/ui/Badge'
+import { ImagePlaceholder } from '@/components/ui/ImagePlaceholder'
 import type { Product, ProductImage } from '@/types'
 
 // Revalidar cada hora (ISR)
@@ -92,9 +93,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-gris-piedra/50 font-playfair text-lg">
-                Sin imagen
-              </div>
+              <ImagePlaceholder aspectRatio="square" label={product.name} className="absolute inset-0 h-full" />
             )}
             {/* Badges */}
             <div className="absolute top-4 left-4 flex flex-col gap-2">

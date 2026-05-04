@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Minus, Plus, Trash2 } from 'lucide-react'
 import { useCartStore } from '@/store/cart'
+import { ImagePlaceholder } from '@/components/ui/ImagePlaceholder'
 import type { CartItem as CartItemType } from '@/types'
 
 const formatPrice = (price: number) =>
@@ -16,7 +17,7 @@ export const CartItem = ({ item }: { item: CartItemType }) => {
         {item.imageUrl ? (
           <Image src={item.imageUrl} alt={item.name} fill className="object-cover" sizes="80px" />
         ) : (
-          <div className="w-full h-full bg-gris-piedra/10" />
+          <ImagePlaceholder aspectRatio="4/5" label={item.name} className="absolute inset-0 h-full !p-1" />
         )}
       </div>
 

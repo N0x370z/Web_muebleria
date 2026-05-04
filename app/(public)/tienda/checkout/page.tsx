@@ -1,17 +1,34 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { ChevronRight, Lock } from 'lucide-react'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements } from '@stripe/react-stripe-js'
 import { useCartStore } from '@/store/cart'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { StripePaymentForm } from '@/components/checkout/StripePaymentForm'
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || '')
 
 export default function CheckoutPage() {
-  const router = useRouter()
   const { items, getSubtotal, getItemCount } = useCartStore()
-  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [step, setStep] = useState<1 | 2>(1)
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'mercadopago'>('stripe')
+  const [clientSecret, setClientSecret] = useState('')
+  const [orderId, setOrderId] = useState('')
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [shippingAddress, setShippingAddress] = useState({
+    fullName: '',
+    email: '',
+    street: '',
+    city: '',
+    postalCode: '',
+    state: '',
+    phone: '',
+    country: 'México'
+  })
 
   const subtotal = getSubtotal()
   const shipping = subtotal > 8000 ? 0 : 500
@@ -20,6 +37,69 @@ export default function CheckoutPage() {
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(price)
+
+  const handleGoToPayment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStep(2)
+  }
+
+  const prepareStripePayment = async () => {
+    setIsProcessing(true)
+    try {
+      const res = await fetch('/api/checkout/create-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items,
+          shippingAddress,
+          paymentMethod: 'stripe'
+        }),
+      })
+      const data = await res.json()
+      if (data.clientSecret) {
+        setClientSecret(data.clientSecret)
+        setOrderId(data.orderId)
+      } else {
+        alert(data.error || 'Error al iniciar pago con Stripe')
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const prepareMercadoPago = async () => {
+    setIsProcessing(true)
+    try {
+      const res = await fetch('/api/checkout/create-mp-preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items,
+          shippingAddress,
+          paymentMethod: 'mercadopago'
+        }),
+      })
+      const data = await res.json()
+      if (data.init_point) {
+        window.location.href = data.init_point
+      } else {
+        alert(data.error || 'Error al iniciar pago con MercadoPago')
+        setIsProcessing(false)
+      }
+    } catch (error) {
+      console.error(error)
+      setIsProcessing(false)
+    }
+  }
+
+  useEffect(() => {
+    if (step === 2 && paymentMethod === 'stripe' && !clientSecret) {
+      prepareStripePayment()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, paymentMethod])
 
   if (items.length === 0) {
     return (
@@ -39,7 +119,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="bg-blanco-hueso min-h-screen pb-20">
-      {/* Header simple para checkout */}
       <div className="bg-white border-b border-gris-piedra/20 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
           <Link href="/" className="font-playfair text-2xl font-bold text-madera-oscura">
@@ -55,100 +134,80 @@ export default function CheckoutPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-10">
         <div className="flex flex-col lg:flex-row gap-12">
           
-          {/* Columna Izquierda: Formulario de Pasos */}
           <div className="flex-1">
-            {/* Indicador de pasos */}
             <div className="flex items-center mb-8 text-sm font-dm-sans">
               <span className={`font-semibold ${step >= 1 ? 'text-madera-oscura' : 'text-gris-piedra'}`}>Envío</span>
               <ChevronRight className="w-4 h-4 mx-2 text-gris-piedra" />
               <span className={`font-semibold ${step >= 2 ? 'text-madera-oscura' : 'text-gris-piedra'}`}>Pago</span>
-              <ChevronRight className="w-4 h-4 mx-2 text-gris-piedra" />
-              <span className={`font-semibold ${step >= 3 ? 'text-madera-oscura' : 'text-gris-piedra'}`}>Confirmación</span>
             </div>
 
             <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gris-piedra/10">
               {step === 1 && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                <form onSubmit={handleGoToPayment} className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                   <h2 className="font-playfair text-2xl font-bold text-madera-oscura">Datos de Envío</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input label="Nombre" placeholder="Juan" required />
-                    <Input label="Apellidos" placeholder="Pérez" required />
+                    <Input label="Nombre(s)" value={shippingAddress.fullName} onChange={(e) => setShippingAddress({...shippingAddress, fullName: e.target.value})} required />
+                    <Input label="Correo Electrónico" type="email" value={shippingAddress.email} onChange={(e) => setShippingAddress({...shippingAddress, email: e.target.value})} required />
                     <div className="md:col-span-2">
-                      <Input label="Correo Electrónico" type="email" placeholder="juan@ejemplo.com" required />
+                      <Input label="Dirección Completa" value={shippingAddress.street} onChange={(e) => setShippingAddress({...shippingAddress, street: e.target.value})} required />
                     </div>
-                    <div className="md:col-span-2">
-                      <Input label="Dirección Completa" placeholder="Calle y número" required />
-                    </div>
-                    <Input label="Ciudad" placeholder="Ciudad de México" required />
-                    <Input label="Código Postal" placeholder="10000" required />
-                    <Input label="Estado" placeholder="CDMX" required />
-                    <Input label="Teléfono" placeholder="55 1234 5678" required />
+                    <Input label="Ciudad" value={shippingAddress.city} onChange={(e) => setShippingAddress({...shippingAddress, city: e.target.value})} required />
+                    <Input label="Código Postal" value={shippingAddress.postalCode} onChange={(e) => setShippingAddress({...shippingAddress, postalCode: e.target.value})} required />
+                    <Input label="Estado" value={shippingAddress.state} onChange={(e) => setShippingAddress({...shippingAddress, state: e.target.value})} required />
+                    <Input label="Teléfono" value={shippingAddress.phone} onChange={(e) => setShippingAddress({...shippingAddress, phone: e.target.value})} required />
                   </div>
-                  <Button className="w-full mt-6" onClick={() => setStep(2)}>
+                  <Button type="submit" className="w-full mt-6">
                     Continuar al Pago
                   </Button>
-                </div>
+                </form>
               )}
 
               {step === 2 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                   <h2 className="font-playfair text-2xl font-bold text-madera-oscura">Método de Pago</h2>
-                  <p className="text-sm text-gris-piedra mb-4">
-                    Selecciona tu método de pago preferido.
-                  </p>
                   
-                  <div className="space-y-4">
-                    <label className="flex items-center p-4 border border-dorado-suave bg-dorado-suave/5 rounded-lg cursor-pointer">
-                      <input type="radio" name="payment" className="text-dorado-suave focus:ring-dorado-suave" defaultChecked />
-                      <span className="ml-3 font-medium text-madera-oscura">Tarjeta de Crédito / Débito (Stripe)</span>
+                  <div className="space-y-4 mb-8">
+                    <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'stripe' ? 'border-dorado-suave bg-dorado-suave/5' : 'border-gris-piedra/20 hover:border-dorado-suave/50'}`}>
+                      <input type="radio" name="payment" checked={paymentMethod === 'stripe'} onChange={() => { setPaymentMethod('stripe'); setClientSecret('') }} className="text-dorado-suave focus:ring-dorado-suave" />
+                      <span className="ml-3 font-medium text-madera-oscura">Tarjeta de Crédito / Débito</span>
                     </label>
-                    <label className="flex items-center p-4 border border-gris-piedra/20 hover:border-dorado-suave/50 rounded-lg cursor-pointer transition-colors">
-                      <input type="radio" name="payment" className="text-dorado-suave focus:ring-dorado-suave" />
+                    <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'mercadopago' ? 'border-dorado-suave bg-dorado-suave/5' : 'border-gris-piedra/20 hover:border-dorado-suave/50'}`}>
+                      <input type="radio" name="payment" checked={paymentMethod === 'mercadopago'} onChange={() => setPaymentMethod('mercadopago')} className="text-dorado-suave focus:ring-dorado-suave" />
                       <span className="ml-3 font-medium text-madera-oscura">MercadoPago</span>
                     </label>
                   </div>
 
-                  <div className="flex gap-4 mt-8">
-                    <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-                      Atrás
-                    </Button>
-                    <Button onClick={() => setStep(3)} className="flex-1">
-                      Revisar Pedido
-                    </Button>
-                  </div>
-                </div>
-              )}
+                  {paymentMethod === 'stripe' && (
+                    <>
+                      {isProcessing && !clientSecret ? (
+                        <div className="py-10 flex justify-center">
+                          <span className="h-8 w-8 rounded-full border-4 border-dorado-suave border-t-transparent animate-spin" />
+                        </div>
+                      ) : clientSecret && (
+                        <div className="mt-6">
+                          <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe', variables: { colorPrimary: '#B8935A' } } }}>
+                            <StripePaymentForm clientSecret={clientSecret} orderId={orderId} onCancel={() => setStep(1)} />
+                          </Elements>
+                        </div>
+                      )}
+                    </>
+                  )}
 
-              {step === 3 && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                  <h2 className="font-playfair text-2xl font-bold text-madera-oscura">Confirmar Pedido</h2>
-                  <div className="bg-crema-marfil/30 p-4 rounded-lg space-y-2 text-sm font-dm-sans">
-                    <p><strong className="text-madera-oscura">Envío a:</strong> Juan Pérez, Calle y número, CDMX, 10000</p>
-                    <p><strong className="text-madera-oscura">Contacto:</strong> juan@ejemplo.com, 55 1234 5678</p>
-                    <p><strong className="text-madera-oscura">Método de pago:</strong> Tarjeta de Crédito (Stripe)</p>
-                  </div>
-
-                  <div className="flex gap-4 mt-8">
-                    <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
-                      Atrás
-                    </Button>
-                    <Button 
-                      onClick={() => {
-                        // Aquí iría la lógica de procesar pago con Stripe/MP
-                        alert('¡Pedido procesado con éxito! (Simulación)')
-                        router.push('/')
-                      }} 
-                      className="flex-1"
-                    >
-                      Pagar {formatPrice(total)}
-                    </Button>
-                  </div>
+                  {paymentMethod === 'mercadopago' && (
+                    <div className="flex gap-4 mt-8">
+                      <Button variant="outline" onClick={() => setStep(1)} className="flex-1" disabled={isProcessing}>
+                        Atrás
+                      </Button>
+                      <Button onClick={prepareMercadoPago} className="flex-1" isLoading={isProcessing} disabled={isProcessing}>
+                        Pagar en MercadoPago
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Columna Derecha: Resumen del Pedido */}
           <div className="w-full lg:w-[400px]">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gris-piedra/10 sticky top-24">
               <h3 className="font-playfair text-xl font-bold text-madera-oscura mb-6">Resumen del Pedido</h3>

@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Heart } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
+import { ImagePlaceholder } from '@/components/ui/ImagePlaceholder'
 import type { ProductCard as ProductCardType } from '@/types'
 
 // ── Tipos ──────────────────────────────────────────────────────────
@@ -93,14 +94,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
             )}
           </>
         ) : (
-          <div
-            className="absolute inset-0 flex items-center justify-center bg-crema-marfil"
-            aria-label="Sin imagen disponible"
-          >
-            <span className="font-playfair text-gris-piedra/40 text-sm">
-              Sin imagen
-            </span>
-          </div>
+          <ImagePlaceholder aspectRatio="4/5" label={name} className="absolute inset-0 h-full" />
         )}
 
         {/* ── Overlay estado de stock ── */}
