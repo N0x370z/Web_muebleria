@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Playfair_Display, DM_Sans, Courier_Prime } from 'next/font/google'
+import { AuthProvider } from '@/components/providers/AuthProvider'
 import '@/styles/globals.css'
 
 // ── Tipografías MaderArte (Google Fonts) ──────────────────────────
@@ -78,21 +79,21 @@ export const metadata: Metadata = {
   },
 }
 
-interface RootLayoutProps {
+export default function RootLayout({
+  children,
+}: {
   children: React.ReactNode
-}
-
-const RootLayout = ({ children }: RootLayoutProps) => {
+}) {
   return (
     <html
       lang="es"
       className={`${playfairDisplay.variable} ${dmSans.variable} ${courierPrime.variable}`}
     >
-      <body>
-        {children}
+      <body className="font-dm-sans bg-blanco-hueso text-madera-oscura antialiased">
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )
 }
-
-export default RootLayout

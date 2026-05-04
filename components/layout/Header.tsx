@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ShoppingBag, Menu, X, Search, Phone } from 'lucide-react'
+import { useSession, signOut } from 'next-auth/react'
+import { ShoppingBag, Menu, X, Search, Phone, User as UserIcon, LogOut, ChevronDown } from 'lucide-react'
 import { useCartStore } from '@/store/cart'
 
 // ── Tipos ──────────────────────────────────────────────────────────
@@ -27,8 +28,10 @@ const NAV_LINKS: NavLink[] = [
 
 const Header = () => {
   const pathname = usePathname()
+  const { data: session, status } = useSession()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const { getItemCount, openCart } = useCartStore()
   const itemCount = getItemCount()
 
@@ -120,6 +123,75 @@ const Header = () => {
                 <Search className="h-5 w-5" aria-hidden="true" />
               </button>
 
+              {/* Usuario */}
+              <div className="relative">
+                {status === 'authenticated' ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                      className="flex items-center gap-1 btn-ghost p-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dorado-suave"
+                      aria-label="Menú de usuario"
+                      aria-expanded={isUserMenuOpen}
+                    >
+                      <div className="h-5 w-5 rounded-full bg-dorado-suave/20 flex items-center justify-center">
+                        <UserIcon className="h-3 w-3 text-dorado-suave" />
+                      </div>
+                      <span className="hidden lg:block text-xs font-medium max-w-[80px] truncate">
+                        {session.user?.name?.split(' ')[0]}
+                      </span>
+                      <ChevronDown className={`h-3 w-3 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isUserMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gris-piedra/10 py-1 z-50 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="px-4 py-2 border-bottom border-gris-piedra/10 mb-1">
+                          <p className="text-xs font-bold text-madera-oscura truncate">{session.user?.name}</p>
+                          <p className="text-[10px] text-gris-piedra truncate">{session.user?.email}</p>
+                        </div>
+                        <Link
+                          href="/cuenta/perfil"
+                          className="block px-4 py-2 text-sm text-gris-piedra hover:bg-crema-marfil hover:text-madera-oscura transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          Mi Perfil
+                        </Link>
+                        <Link
+                          href="/cuenta/mis-pedidos"
+                          className="block px-4 py-2 text-sm text-gris-piedra hover:bg-crema-marfil hover:text-madera-oscura transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          Mis Pedidos
+                        </Link>
+                        {session.user.role === 'ADMIN' && (
+                          <Link
+                            href="/admin"
+                            className="block px-4 py-2 text-sm text-dorado-suave hover:bg-crema-marfil transition-colors font-medium"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            Panel Admin
+                          </Link>
+                        )}
+                        <button
+                          onClick={() => signOut()}
+                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Cerrar Sesión
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    href="/cuenta/login"
+                    className="btn-ghost p-2 rounded-full block"
+                    aria-label="Iniciar sesión"
+                  >
+                    <UserIcon className="h-5 w-5" aria-hidden="true" />
+                  </Link>
+                )}
+              </div>
+
               {/* Carrito */}
               <button
                 onClick={openCart}
@@ -196,6 +268,52 @@ const Header = () => {
             </div>
 
             <nav className="flex flex-col p-4 gap-1" aria-label="Menú móvil">
+              {/* Usuario en móvil */}
+              <div className="mb-4 pb-4 border-b border-crema-marfil">
+                {status === 'authenticated' ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 px-4">
+                      <div className="h-10 w-10 rounded-full bg-dorado-suave/20 flex items-center justify-center">
+                        <UserIcon className="h-5 w-5 text-dorado-suave" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-madera-oscura truncate">{session.user?.name}</p>
+                        <p className="text-xs text-gris-piedra truncate">{session.user?.email}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-1">
+                      <Link
+                        href="/cuenta/perfil"
+                        className="px-4 py-2 text-sm text-gris-piedra hover:text-dorado-suave transition-colors"
+                      >
+                        Mi Perfil
+                      </Link>
+                      <Link
+                        href="/cuenta/mis-pedidos"
+                        className="px-4 py-2 text-sm text-gris-piedra hover:text-dorado-suave transition-colors"
+                      >
+                        Mis Pedidos
+                      </Link>
+                      <button
+                        onClick={() => signOut()}
+                        className="px-4 py-2 text-sm text-red-600 flex items-center gap-2"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <Link
+                    href="/cuenta/login"
+                    className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-madera-oscura hover:text-dorado-suave transition-colors"
+                  >
+                    <UserIcon className="h-5 w-5" />
+                    Iniciar Sesión
+                  </Link>
+                )}
+              </div>
+
               {NAV_LINKS.map(({ href, label }) => (
                 <Link
                   key={href}

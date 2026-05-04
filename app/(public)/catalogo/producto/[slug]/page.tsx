@@ -6,6 +6,8 @@ import { prisma } from '@/lib/prisma'
 import { AddToCartButton } from '@/components/product/AddToCartButton'
 import { Badge } from '@/components/ui/Badge'
 import { ImagePlaceholder } from '@/components/ui/ImagePlaceholder'
+import { StarRating } from '@/components/ui/StarRating'
+import { ReviewForm } from '@/components/product/ReviewForm'
 import type { Product, ProductImage } from '@/types'
 
 // Revalidar cada hora (ISR)
@@ -36,15 +38,24 @@ export default async function ProductPage({ params }: ProductPageProps) {
       images: { orderBy: { order: 'asc' } },
       variants: true,
       tags: true,
+      reviews: {
+        where: { isVisible: true },
+        include: { user: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+      },
     },
   })
 
   if (!product) notFound()
 
+  const reviews = product.reviews
+  const averageRating = reviews.length > 0 
+    ? Math.round(reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length)
+    : 0
+
   const mainImage = product.images[0] as ProductImage | undefined
   const isOnSale = product.comparePrice !== null && product.comparePrice > product.price
   
-  // Normalizar el producto para que coincida con el tipo esperado
   const normalizedProduct: Product = {
     ...product,
     comparePrice: product.comparePrice ?? undefined,
@@ -79,10 +90,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </Link>
       </nav>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
-        {/* Galería de imágenes (Simplificada para la base) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 mb-20">
+        {/* Galería de imágenes */}
         <div className="space-y-4">
-          <div className="relative aspect-square bg-crema-marfil rounded-xl overflow-hidden">
+          <div className="relative aspect-square bg-crema-marfil rounded-xl overflow-hidden shadow-sm">
             {mainImage ? (
               <Image
                 src={mainImage.url}
@@ -110,7 +121,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           {product.images.length > 1 && (
             <div className="flex gap-4 overflow-x-auto pb-2 snap-x">
               {product.images.map((img) => (
-                <div key={img.id} className="relative w-24 h-24 bg-crema-marfil rounded-lg overflow-hidden flex-shrink-0 cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
+                <div key={img.id} className="relative w-24 h-24 bg-crema-marfil rounded-lg overflow-hidden flex-shrink-0 cursor-pointer border border-gris-piedra/10 opacity-70 hover:opacity-100 transition-opacity">
                   <Image src={img.url} alt={img.alt || product.name} fill className="object-cover" />
                 </div>
               ))}
@@ -120,6 +131,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
         {/* Detalles del producto */}
         <div className="flex flex-col">
+          <div className="flex items-center gap-2 mb-2">
+            <StarRating rating={averageRating} size={14} />
+            <span className="text-xs font-bold text-gris-piedra uppercase tracking-wider">
+              {reviews.length} {reviews.length === 1 ? 'Reseña' : 'Reseñas'}
+            </span>
+          </div>
+
           <h1 className="font-playfair text-3xl md:text-4xl lg:text-5xl font-bold text-madera-oscura mb-4 leading-tight">
             {product.name}
           </h1>
@@ -139,7 +157,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <p>{product.description}</p>
           </div>
 
-          {/* Variantes - placeholder para la fase de refinamiento */}
+          {/* Variantes */}
           {product.variants.length > 0 && (
             <div className="mb-8">
               <h3 className="font-semibold text-madera-oscura mb-3">Variantes disponibles:</h3>
@@ -150,14 +168,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   </Badge>
                 ))}
               </div>
-              <p className="text-xs text-gris-piedra mt-2 italic">
-                * Selector dinámico de variantes en desarrollo (Fase de refinamiento).
-              </p>
             </div>
           )}
 
           <div className="mt-auto space-y-4 pt-8 border-t border-gris-piedra/20">
-            {/* Si tiene variantes, de momento pasamos undefined para que se agregue el producto base */}
             <AddToCartButton product={normalizedProduct} />
             
             <p className="text-sm text-center text-gris-piedra font-dm-sans">
@@ -167,6 +181,60 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Sección de Reseñas */}
+      <section className="pt-16 border-t border-gris-piedra/10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          {/* Resumen y Formulario */}
+          <div className="lg:col-span-5 space-y-8">
+            <div>
+              <h2 className="font-playfair text-3xl font-bold text-madera-oscura mb-2">Opiniones de clientes</h2>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex flex-col">
+                  <span className="text-5xl font-bold text-madera-oscura">{averageRating > 0 ? averageRating.toFixed(1) : '—'}</span>
+                  <StarRating rating={averageRating} size={20} className="mt-1" />
+                </div>
+                <div className="text-sm text-gris-piedra">
+                  Basado en {reviews.length} {reviews.length === 1 ? 'opinión' : 'opiniones'}
+                </div>
+              </div>
+            </div>
+
+            <ReviewForm productId={product.id} />
+          </div>
+
+          {/* Lista de Reseñas */}
+          <div className="lg:col-span-7">
+            <div className="space-y-6">
+              {reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <div key={review.id} className="bg-white p-6 rounded-xl border border-gris-piedra/10 shadow-sm">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <StarRating rating={review.rating} size={14} />
+                          <span className="text-sm font-bold text-madera-oscura">{review.title}</span>
+                        </div>
+                        <p className="text-xs text-gris-piedra font-medium">
+                          Por {review.user.name} • {new Date(review.createdAt).toLocaleDateString('es-MX')}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gris-piedra leading-relaxed italic">
+                      &quot;{review.body}&quot;
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="bg-crema-marfil/20 rounded-2xl p-12 text-center border border-dashed border-gris-piedra/10">
+                  <p className="text-gris-piedra font-dm-sans">Aún no hay reseñas para este producto. ¡Sé el primero en compartir tu experiencia!</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
+
