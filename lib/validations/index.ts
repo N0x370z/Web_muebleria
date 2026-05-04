@@ -76,7 +76,7 @@ export const QuoteSchema = z.object({
   email: z.string().email(),
   phone: z.string().optional(),
   message: z.string().min(20).max(2000),
-  imageUrl: z.string().url().optional(),
+  imageUrl: z.string().url().optional().or(z.literal('')),
 })
 
 export type QuoteInput = z.infer<typeof QuoteSchema>
@@ -121,14 +121,3 @@ export const ReviewSchema = z.object({
 
 export type ReviewInput = z.infer<typeof ReviewSchema>
 
-// ── Cotización ─────────────────────────────────────────────────────
-
-export const QuoteSchema = z.object({
-  name: z.string().min(2).max(100),
-  email: z.string().email(),
-  phone: z.string().optional(),
-  message: z.string().min(10).max(2000),
-  imageUrl: z.string().url().optional().or(z.literal('')),
-})
-
-export type QuoteInput = z.infer<typeof QuoteSchema>

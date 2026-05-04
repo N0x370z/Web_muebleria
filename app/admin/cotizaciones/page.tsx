@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma'
 import { 
-  MessageSquare, 
   ExternalLink,
   Search,
   Image as ImageIcon
@@ -12,7 +11,7 @@ export default async function AdminQuotesPage() {
     orderBy: { createdAt: 'desc' },
   })
 
-  const statusVariants: Record<string, any> = {
+  const statusVariants: Record<string, 'warning' | 'info' | 'success' | 'dark'> = {
     PENDING: 'warning',
     IN_REVIEW: 'info',
     RESPONDED: 'success',

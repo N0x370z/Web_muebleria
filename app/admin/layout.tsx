@@ -9,7 +9,6 @@ import {
   MessageSquare, 
   FileText, 
   Layers, 
-  Settings, 
   LogOut,
   Home
 } from 'lucide-react'

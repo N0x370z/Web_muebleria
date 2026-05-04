@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
-import { AddToCartButton } from '@/components/product/AddToCartButton'
+import { ProductActions } from '@/components/product/ProductActions'
 import { Badge } from '@/components/ui/Badge'
 import { ImagePlaceholder } from '@/components/ui/ImagePlaceholder'
 import { StarRating } from '@/components/ui/StarRating'
@@ -157,22 +157,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <p>{product.description}</p>
           </div>
 
-          {/* Variantes */}
-          {product.variants.length > 0 && (
-            <div className="mb-8">
-              <h3 className="font-semibold text-madera-oscura mb-3">Variantes disponibles:</h3>
-              <div className="flex flex-wrap gap-2">
-                {product.variants.map((v) => (
-                  <Badge key={v.id} variant="outline" className="text-sm py-1.5">
-                    {v.label}: {v.value} {v.priceModifier > 0 && `(+${v.priceModifier})`}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
           <div className="mt-auto space-y-4 pt-8 border-t border-gris-piedra/20">
-            <AddToCartButton product={normalizedProduct} />
+            <ProductActions product={normalizedProduct} />
             
             <p className="text-sm text-center text-gris-piedra font-dm-sans">
               Envío calculado en el checkout. 

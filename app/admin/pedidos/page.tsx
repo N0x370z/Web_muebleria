@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma'
 import { 
-  ShoppingCart, 
   ExternalLink,
   Search,
   Filter
@@ -18,7 +17,7 @@ export default async function AdminOrdersPage() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(price)
 
-  const statusVariants: Record<string, any> = {
+  const statusVariants: Record<string, 'warning' | 'info' | 'success' | 'dark' | 'danger'> = {
     PENDING: 'warning',
     CONFIRMED: 'info',
     IN_PRODUCTION: 'dark',
