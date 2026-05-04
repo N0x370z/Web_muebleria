@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ──────────────────────────────────────────────
+   MaderArte – Estilos globales
+   Paleta: Madera Oscura #2C1A0E | Crema Marfil #F5EFE0
+            Dorado Suave #B8935A | Gris Piedra #8A8070
+            Blanco Hueso #FDFAF5
+   ────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    --color-madera-oscura: #2c1a0e;
+    --color-crema-marfil: #f5efe0;
+    --color-dorado-suave: #b8935a;
+    --color-gris-piedra: #8a8070;
+    --color-blanco-hueso: #fdfaf5;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-blanco-hueso text-madera-oscura font-dm-sans;
+    min-height: 100dvh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-playfair;
+  }
+
+  /* Focus visible accesible */
+  :focus-visible {
+    outline: 2px solid var(--color-dorado-suave);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Scrollbar personalizada */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-crema-marfil);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-gris-piedra);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-madera-oscura);
+  }
+
+  /* Selección de texto */
+  ::selection {
+    background-color: var(--color-dorado-suave);
+    color: var(--color-blanco-hueso);
+  }
+}
+
+@layer components {
+  /* ── Botones ── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded
+           bg-dorado-suave text-blanco-hueso font-dm-sans font-medium text-sm
+           transition-all duration-200
+           hover:bg-madera-oscura hover:shadow-gold
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dorado-suave
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded
+           border border-dorado-suave text-dorado-suave font-dm-sans font-medium text-sm
+           transition-all duration-200
+           hover:bg-dorado-suave hover:text-blanco-hueso
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dorado-suave
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded
+           text-gris-piedra font-dm-sans font-medium text-sm
+           transition-all duration-200
+           hover:text-madera-oscura hover:bg-crema-marfil
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dorado-suave;
+  }
+
+  /* ── Tarjetas ── */
+  .card {
+    @apply bg-crema-marfil rounded-lg shadow-card
+           transition-shadow duration-300
+           hover:shadow-card-hover;
+  }
+
+  /* ── Badges ── */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-sm
+           font-courier text-xs font-medium tracking-wide;
+  }
+
+  .badge-gold {
+    @apply badge bg-dorado-suave text-blanco-hueso;
+  }
+
+  .badge-dark {
+    @apply badge bg-madera-oscura text-crema-marfil;
+  }
+
+  .badge-outline {
+    @apply badge border border-gris-piedra text-gris-piedra;
+  }
+
+  /* ── Inputs ── */
+  .input {
+    @apply w-full px-4 py-2.5 rounded border border-gris-piedra/30
+           bg-blanco-hueso text-madera-oscura font-dm-sans text-sm
+           placeholder:text-gris-piedra/60
+           transition-colors duration-200
+           focus:outline-none focus:border-dorado-suave focus:ring-1 focus:ring-dorado-suave
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* ── Sección heading ── */
+  .section-title {
+    @apply font-playfair text-3xl md:text-4xl text-madera-oscura leading-tight;
+  }
+
+  .section-subtitle {
+    @apply font-dm-sans text-gris-piedra text-base md:text-lg leading-relaxed;
+  }
+
+  /* ── Precio ── */
+  .price {
+    @apply font-courier text-madera-oscura font-medium;
+  }
+
+  .price-compare {
+    @apply font-courier text-gris-piedra line-through;
+  }
+
+  /* ── Separador decorativo ── */
+  .divider-gold {
+    @apply w-16 h-px bg-dorado-suave;
+  }
+}
+
+/* ── Animaciones CSS (para casos donde Framer Motion no aplica) ── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-crema-marfil) 25%,
+    #ece6d4 50%,
+    var(--color-crema-marfil) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}

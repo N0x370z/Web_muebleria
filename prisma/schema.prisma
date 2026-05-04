@@ -1,0 +1,307 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// USUARIOS Y AUTENTICACIÓN (NextAuth compatible)
+// ─────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // bcrypt hash (solo para login con email)
+  role          UserRole  @default(CUSTOMER)
+  phone         String?
+  accounts      Account[]
+  sessions      Session[]
+  orders        Order[]
+  reviews       Review[]
+  quotes        Quote[]
+  addresses     Address[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum UserRole {
+  CUSTOMER
+  EDITOR
+  ADMIN
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  label      String   @default("Casa")
+  street     String
+  city       String
+  state      String
+  postalCode String
+  country    String   @default("México")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────
+// CATÁLOGO
+// ─────────────────────────────────────────────
+
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  imageUrl    String?
+  order       Int       @default(0)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id             String      @id @default(cuid())
+  slug           String      @unique
+  name           String
+  description    String      @db.Text
+  price          Float
+  comparePrice   Float?
+  stock          Int         @default(0)
+  isCustomizable Boolean     @default(false)
+  isActive       Boolean     @default(true)
+  category       Category    @relation(fields: [categoryId], references: [id])
+  categoryId     String
+  variants       Variant[]
+  images         Image[]
+  reviews        Review[]
+  tags           Tag[]
+  orderItems     OrderItem[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([categoryId])
+  @@index([slug])
+}
+
+model Variant {
+  id            String  @id @default(cuid())
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId     String
+  type          String  // "color" | "material" | "acabado"
+  label         String
+  value         String
+  imageUrl      String?
+  priceModifier Float   @default(0)
+  stock         Int     @default(0)
+
+  @@index([productId])
+}
+
+model Image {
+  id        String  @id @default(cuid())
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  url       String  // Cloudinary URL
+  alt       String  @default("")
+  order     Int     @default(0)
+
+  @@index([productId])
+}
+
+model Tag {
+  id       String    @id @default(cuid())
+  name     String    @unique // "Nuevo" | "Oferta" | "Más Vendido" | "Personalizable"
+  slug     String    @unique
+  products Product[]
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  rating    Int      // 1-5
+  title     String?
+  body      String   @db.Text
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([productId, userId])
+  @@index([productId])
+}
+
+// ─────────────────────────────────────────────
+// PEDIDOS
+// ─────────────────────────────────────────────
+
+model Order {
+  id                String      @id @default(cuid())
+  orderNumber       String      @unique // Ej: MA-2024-00001
+  user              User?       @relation(fields: [userId], references: [id])
+  userId            String?
+  status            OrderStatus @default(PENDING)
+  items             OrderItem[]
+  subtotal          Float
+  tax               Float
+  shippingCost      Float       @default(0)
+  discount          Float       @default(0)
+  total             Float
+  shippingAddress   Json
+  billingAddress    Json?
+  paymentMethod     String      // "stripe" | "mercadopago"
+  stripePaymentId   String?
+  mpPaymentId       String?
+  notes             String?     @db.Text
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id            String  @id @default(cuid())
+  order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId       String
+  product       Product @relation(fields: [productId], references: [id])
+  productId     String
+  productName   String  // snapshot al momento de compra
+  productSlug   String
+  imageUrl      String?
+  variantLabel  String?
+  quantity      Int
+  unitPrice     Float
+  total         Float
+
+  @@index([orderId])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  IN_PRODUCTION
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+// ─────────────────────────────────────────────
+// COTIZACIONES
+// ─────────────────────────────────────────────
+
+model Quote {
+  id          String      @id @default(cuid())
+  user        User?       @relation(fields: [userId], references: [id])
+  userId      String?
+  name        String
+  email       String
+  phone       String?
+  message     String      @db.Text
+  imageUrl    String?     // Referencia visual en Cloudinary
+  status      QuoteStatus @default(PENDING)
+  adminNotes  String?     @db.Text
+  respondedAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+enum QuoteStatus {
+  PENDING
+  IN_REVIEW
+  RESPONDED
+  CLOSED
+}
+
+// ─────────────────────────────────────────────
+// BLOG
+// ─────────────────────────────────────────────
+
+model BlogPost {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  title       String
+  excerpt     String
+  content     String          @db.Text
+  coverImage  String?
+  author      String
+  readingTime Int             @default(5) // minutos
+  published   Boolean         @default(false)
+  publishedAt DateTime?
+  category    BlogCategory
+  tags        String[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([slug])
+  @@index([published])
+}
+
+enum BlogCategory {
+  DECORACION
+  TENDENCIAS
+  GUIAS_COMPRA
+  CUIDADO_MUEBLES
+}
+
+// ─────────────────────────────────────────────
+// CONFIGURACIÓN DEL SITIO
+// ─────────────────────────────────────────────
+
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  subtitle  String?
+  imageUrl  String
+  linkUrl   String?
+  linkText  String?
+  isActive  Boolean  @default(false)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
