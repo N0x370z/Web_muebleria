@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
-import { prisma } from '@/lib/prisma'
+import { prisma, isDatabaseConfigured } from '@/lib/prisma'
 import { ProductCard } from '@/components/catalog/ProductCard'
 import { CatalogFilters } from '@/components/catalog/CatalogFilters'
 import type { Prisma } from '@prisma/client'
@@ -16,6 +16,10 @@ interface CategoryPageProps {
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
+  if (!isDatabaseConfigured()) {
+    return { title: 'Catálogo' }
+  }
+
   const category = await prisma.category.findUnique({
     where: { slug: params.categoria },
   })
@@ -29,6 +33,10 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 }
 
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
+  if (!isDatabaseConfigured()) {
+    notFound()
+  }
+
   const category = await prisma.category.findUnique({
     where: { slug: params.categoria },
   })

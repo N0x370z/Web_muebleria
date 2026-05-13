@@ -13,6 +13,8 @@ import {
 } from 'lucide-react'
 import { LogoutButton } from '@/components/admin/LogoutButton'
 
+export const dynamic = 'force-dynamic'
+
 const ADMIN_LINKS = [
   { href: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
   { href: '/admin/pedidos', label: 'Pedidos', icon: <ShoppingCart size={18} /> },

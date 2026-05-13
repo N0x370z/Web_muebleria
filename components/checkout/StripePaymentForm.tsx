@@ -1,17 +1,32 @@
 'use client'
 
+/**
+ * StripePaymentForm – formulario de pago Stripe.
+ * Siempre se renderiza dentro de <Elements> (provisto por StripeCheckout).
+ * Los hooks de @stripe/react-stripe-js vienen a través de prop 'reactStripe'.
+ */
+
 import { useState } from 'react'
-import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js'
 import { Button } from '@/components/ui/Button'
 import { useCartStore } from '@/store/cart'
 
-export const StripePaymentForm = ({ orderId, onCancel }: { orderId: string, onCancel: () => void }) => {
-  const stripe = useStripe()
-  const elements = useElements()
+interface StripePaymentFormProps {
+  orderId: string
+  onCancel: () => void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  reactStripe: any
+}
+
+export const StripePaymentForm = ({ orderId, onCancel, reactStripe }: StripePaymentFormProps) => {
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const { getSubtotal } = useCartStore()
-  
+
+  const { PaymentElement, useStripe, useElements } = reactStripe
+
+  const stripe = useStripe()
+  const elements = useElements()
+
   const subtotal = getSubtotal()
   const shipping = subtotal > 8000 ? 0 : 500
   const tax = subtotal * 0.16
@@ -19,14 +34,12 @@ export const StripePaymentForm = ({ orderId, onCancel }: { orderId: string, onCa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!stripe || !elements) return
 
     setIsLoading(true)
     setErrorMessage(null)
 
     const baseUrl = window.location.origin
-
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
@@ -46,25 +59,25 @@ export const StripePaymentForm = ({ orderId, onCancel }: { orderId: string, onCa
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <PaymentElement options={{ layout: 'tabs' }} />
-      
+
       {errorMessage && (
-        <div className="p-4 bg-red-50 text-red-600 rounded-md text-sm">
+        <div className="p-4 bg-red-50 text-red-600 rounded-md text-sm" role="alert">
           {errorMessage}
         </div>
       )}
 
       <div className="flex gap-4 mt-8">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onCancel} 
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
           className="flex-1"
           disabled={isLoading}
         >
           Atrás
         </Button>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           className="flex-1"
           disabled={!stripe || isLoading}
           isLoading={isLoading}
@@ -75,3 +88,4 @@ export const StripePaymentForm = ({ orderId, onCancel }: { orderId: string, onCa
     </form>
   )
 }
+

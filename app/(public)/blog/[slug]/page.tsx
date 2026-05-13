@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { prisma } from '@/lib/prisma'
+import { prisma, isDatabaseConfigured } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Calendar, Clock, User, ArrowLeft, Share2 } from 'lucide-react'
@@ -12,6 +12,8 @@ interface PostPageProps {
 }
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
+  if (!isDatabaseConfigured()) return {}
+
   const post = await prisma.blogPost.findUnique({
     where: { slug: params.slug },
   })
@@ -25,6 +27,10 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 }
 
 export default async function BlogPostPage({ params }: PostPageProps) {
+  if (!isDatabaseConfigured()) {
+    notFound()
+  }
+
   const post = await prisma.blogPost.findUnique({
     where: { slug: params.slug },
   })

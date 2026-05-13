@@ -2,7 +2,9 @@ import { Resend } from 'resend'
 import { OrderConfirmationEmail } from './emails/order-confirmation'
 import { QuoteReceivedEmail } from './emails/quote-received'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { ShippingAddress } from '@/types'
+
+const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_key_for_build')
 const sender = process.env.RESEND_FROM_EMAIL || 'MaderArte <no-reply@maderarte.com>'
 
 export async function sendOrderConfirmation(order: Record<string, unknown>, email: string) {
@@ -17,7 +19,7 @@ export async function sendOrderConfirmation(order: Record<string, unknown>, emai
         shippingCost: order.shippingCost as number,
         tax: order.tax as number,
         total: order.total as number,
-        shippingAddress: order.shippingAddress as Record<string, unknown>,
+        shippingAddress: order.shippingAddress as unknown as ShippingAddress,
         items: (order.items as Record<string, unknown>[]).map((i: Record<string, unknown>) => ({
           productName: i.productName as string,
           quantity: i.quantity as number,

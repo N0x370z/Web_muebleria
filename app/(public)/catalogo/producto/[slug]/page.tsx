@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
-import { prisma } from '@/lib/prisma'
+import { prisma, isDatabaseConfigured } from '@/lib/prisma'
 import { ProductActions } from '@/components/product/ProductActions'
 import { Badge } from '@/components/ui/Badge'
 import { ImagePlaceholder } from '@/components/ui/ImagePlaceholder'
@@ -18,6 +18,10 @@ interface ProductPageProps {
 }
 
 export async function generateMetadata({ params }: ProductPageProps) {
+  if (!isDatabaseConfigured()) {
+    return { title: 'Producto' }
+  }
+
   const product = await prisma.product.findUnique({
     where: { slug: params.slug },
   })
@@ -31,6 +35,10 @@ export async function generateMetadata({ params }: ProductPageProps) {
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
+  if (!isDatabaseConfigured()) {
+    notFound()
+  }
+
   const product = await prisma.product.findUnique({
     where: { slug: params.slug, isActive: true },
     include: {

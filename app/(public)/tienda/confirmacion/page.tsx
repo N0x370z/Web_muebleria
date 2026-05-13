@@ -6,9 +6,14 @@ import Link from 'next/link'
 import { CheckCircle2, AlertCircle, ShoppingBag } from 'lucide-react'
 import { useCartStore } from '@/store/cart'
 import { Button } from '@/components/ui/Button'
-import { loadStripe } from '@stripe/stripe-js'
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || '')
+// ── Carga dinámica de Stripe: webpackIgnore evita análisis en build ──────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getStripe = async (): Promise<any> => {
+  const { loadStripe } = await import(/* webpackIgnore: true */ '@stripe/stripe-js')
+  return loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY ?? '')
+}
+
 
 function ConfirmationContent() {
   const searchParams = useSearchParams()
@@ -27,14 +32,15 @@ function ConfirmationContent() {
   useEffect(() => {
     // Si viene de Stripe
     if (paymentIntentClientSecret) {
-      stripePromise.then((stripe) => {
+      getStripe().then((stripe) => {
         if (!stripe) {
           setStatus('error')
           setMessage('No se pudo inicializar Stripe.')
           return
         }
         
-        stripe.retrievePaymentIntent(paymentIntentClientSecret).then(({ paymentIntent }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        stripe.retrievePaymentIntent(paymentIntentClientSecret).then(({ paymentIntent }: { paymentIntent: any }) => {
           switch (paymentIntent?.status) {
             case 'succeeded':
               setStatus('success')

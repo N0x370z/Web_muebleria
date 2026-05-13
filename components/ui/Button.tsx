@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge'
 
 // ── Tipos ──────────────────────────────────────────────────────────
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline'
 type ButtonSize = 'sm' | 'md' | 'lg'
 
 export interface ButtonProps
@@ -24,6 +24,8 @@ const variantStyles: Record<ButtonVariant, string> = {
   ghost: 'btn-ghost',
   danger:
     'inline-flex items-center justify-center gap-2 px-6 py-3 rounded bg-red-700 text-white font-medium text-sm transition-all duration-200 hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed',
+  outline:
+    'inline-flex items-center justify-center gap-2 px-6 py-3 rounded border border-madera-oscura bg-transparent text-madera-oscura font-medium text-sm transition-all duration-200 hover:bg-madera-oscura hover:text-blanco-hueso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-madera-oscura disabled:opacity-50 disabled:cursor-not-allowed',
 }
 
 const sizeStyles: Record<ButtonSize, string> = {

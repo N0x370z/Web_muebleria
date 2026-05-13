@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { HeroSection } from '@/components/home/HeroSection'
 import { FeaturedCategories } from '@/components/home/FeaturedCategories'
+import { FeaturedProducts } from '@/components/home/FeaturedProducts'
 import { ValueProps } from '@/components/home/ValueProps'
+import { Testimonials } from '@/components/home/Testimonials'
 
 // SSG — página estática
 export const dynamic = 'force-static'
@@ -17,7 +19,9 @@ const HomePage = () => {
     <>
       <HeroSection />
       <FeaturedCategories />
+      <FeaturedProducts />
       <ValueProps />
+      <Testimonials />
     </>
   )
 }

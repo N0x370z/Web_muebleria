@@ -17,7 +17,7 @@ interface Category {
 }
 
 interface FeaturedCategoriesProps {
-  categories: Category[]
+  categories?: Category[]
 }
 
 // ── Datos de ejemplo (se reemplazarán con datos de Prisma en ISR) ──

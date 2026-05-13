@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { prisma } from '@/lib/prisma'
+import { prisma, isDatabaseConfigured } from '@/lib/prisma'
 import { BlogCard } from '@/components/blog/BlogCard'
 import { Newspaper } from 'lucide-react'
 
@@ -9,10 +9,12 @@ export const metadata: Metadata = {
 }
 
 export default async function BlogPage() {
-  const posts = await prisma.blogPost.findMany({
-    where: { published: true },
-    orderBy: { publishedAt: 'desc' },
-  })
+  const posts = isDatabaseConfigured()
+    ? await prisma.blogPost.findMany({
+        where: { published: true },
+        orderBy: { publishedAt: 'desc' },
+      })
+    : []
 
   return (
     <div className="bg-blanco-hueso min-h-screen">

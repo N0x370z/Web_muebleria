@@ -1,3 +1,6 @@
+/* ── Google Fonts – carga en cliente, sin bloqueo de DNS en build ─ */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=Courier+Prime:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,11 +14,17 @@
 
 @layer base {
   :root {
+    /* Brand palette */
     --color-madera-oscura: #2c1a0e;
     --color-crema-marfil: #f5efe0;
     --color-dorado-suave: #b8935a;
     --color-gris-piedra: #8a8070;
     --color-blanco-hueso: #fdfaf5;
+
+    /* Tipografías – mapeadas desde Google Fonts @import */
+    --font-playfair: 'Playfair Display', serif;
+    --font-dm-sans: 'DM Sans', sans-serif;
+    --font-courier: 'Courier Prime', monospace;
   }
 
   html {

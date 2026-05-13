@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next'
-import { prisma } from '@/lib/prisma'
+import { prisma, isDatabaseConfigured } from '@/lib/prisma'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXTAUTH_URL || 'https://maderarte.com'
@@ -18,6 +18,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: 'weekly' as const,
     priority: route === '' ? 1 : 0.8,
   }))
+
+  if (!isDatabaseConfigured()) {
+    return staticRoutes
+  }
 
   // Rutas dinámicas: Productos
   const products = await prisma.product.findMany({

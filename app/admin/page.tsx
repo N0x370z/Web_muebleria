@@ -1,11 +1,13 @@
 import { prisma } from '@/lib/prisma'
+import Link from 'next/link'
 import { 
   ShoppingCart, 
   DollarSign, 
   MessageSquare, 
   Users,
   TrendingUp,
-  Package
+  Package,
+  CheckCircle
 } from 'lucide-react'
 
 export default async function AdminDashboard() {
@@ -15,7 +17,8 @@ export default async function AdminDashboard() {
     quoteCount,
     userCount,
     productCount,
-    recentOrders
+    recentOrders,
+    lowStockProducts
   ] = await Promise.all([
     prisma.order.count(),
     prisma.order.aggregate({ _sum: { total: true } }),
@@ -26,6 +29,12 @@ export default async function AdminDashboard() {
       take: 5,
       orderBy: { createdAt: 'desc' },
       include: { user: { select: { name: true } } }
+    }),
+    prisma.product.findMany({
+      where: { stock: { lt: 5 } },
+      select: { id: true, name: true, stock: true },
+      orderBy: { stock: 'asc' },
+      take: 5
     })
   ])
 
@@ -34,6 +43,7 @@ export default async function AdminDashboard() {
     { label: 'Pedidos', value: orderCount.toString(), icon: <ShoppingCart className="text-blue-600" />, bg: 'bg-blue-50' },
     { label: 'Cotizaciones Pendientes', value: quoteCount.toString(), icon: <MessageSquare className="text-yellow-600" />, bg: 'bg-yellow-50' },
     { label: 'Clientes', value: userCount.toString(), icon: <Users className="text-purple-600" />, bg: 'bg-purple-50' },
+    { label: 'Productos', value: productCount.toString(), icon: <Package className="text-orange-600" />, bg: 'bg-orange-50' },
   ]
 
   return (
@@ -66,9 +76,9 @@ export default async function AdminDashboard() {
               <TrendingUp size={18} className="text-dorado-suave" />
               Últimos Pedidos
             </h2>
-            <button className="text-xs font-bold text-dorado-suave uppercase tracking-widest hover:text-madera-oscura transition-colors">
+            <Link href="/admin/pedidos" className="text-xs font-bold text-dorado-suave uppercase tracking-widest hover:text-madera-oscura transition-colors">
               Ver todos
-            </button>
+            </Link>
           </div>
           <div className="divide-y divide-crema-marfil">
             {recentOrders.length > 0 ? (
@@ -94,19 +104,38 @@ export default async function AdminDashboard() {
           </div>
         </section>
 
-        {/* Inventory Status Placeholder */}
+        {/* Low Stock Inventory */}
         <section className="bg-white rounded-xl border border-gris-piedra/10 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-crema-marfil flex items-center justify-between">
             <h2 className="font-bold text-madera-oscura flex items-center gap-2">
               <Package size={18} className="text-dorado-suave" />
-              Estado del Inventario
+              Alertas de Inventario
             </h2>
+            <Link href="/admin/productos" className="text-xs font-bold text-dorado-suave uppercase tracking-widest hover:text-madera-oscura transition-colors">
+              Gestionar
+            </Link>
           </div>
-          <div className="p-10 text-center space-y-4">
-            <p className="text-4xl font-bold text-madera-oscura">{productCount}</p>
-            <p className="text-sm text-gris-piedra max-w-xs mx-auto">
-              Productos activos en el catálogo. Próximamente alertas de stock bajo y métricas de popularidad.
-            </p>
+          <div className="divide-y divide-crema-marfil">
+            {lowStockProducts.length > 0 ? (
+              lowStockProducts.map((product) => (
+                <div key={product.id} className="p-4 flex items-center justify-between hover:bg-crema-marfil/20 transition-colors">
+                  <div>
+                    <p className="text-sm font-bold text-madera-oscura">{product.name}</p>
+                    <p className="text-[10px] text-gris-piedra uppercase tracking-wider">Unidades disponibles</p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`text-sm font-bold px-2 py-0.5 rounded ${product.stock === 0 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                      {product.stock}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-12 text-center text-green-600 text-sm font-medium">
+                <CheckCircle className="mx-auto mb-2" size={24} />
+                Todo el inventario está al día.
+              </div>
+            )}
           </div>
         </section>
       </div>

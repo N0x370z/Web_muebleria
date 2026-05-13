@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     for (const item of items) {
       const dbProduct = await prisma.product.findUnique({
         where: { id: item.productId },
-        include: { variants: true },
+        include: { variants: true, images: true },
       })
       
       if (!dbProduct || !dbProduct.isActive) {
