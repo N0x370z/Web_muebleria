@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { CartItem, ProductVariant } from '@/types'
+import type { CartItem } from '@/types'
 
 // ── Tipos del store ────────────────────────────────────────────────
 

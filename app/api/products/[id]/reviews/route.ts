@@ -6,9 +6,10 @@ import { authOptions } from '@/lib/auth'
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -19,7 +20,7 @@ export async function POST(
     }
 
     const body = await req.json()
-    const result = ReviewSchema.safeParse({ ...body, productId: params.id })
+    const result = ReviewSchema.safeParse({ ...body, productId: id })
 
     if (!result.success) {
       return NextResponse.json(
@@ -34,7 +35,7 @@ export async function POST(
     const existingReview = await prisma.review.findUnique({
       where: {
         productId_userId: {
-          productId: params.id,
+          productId: id,
           userId: session.user.id,
         },
       },
@@ -49,7 +50,7 @@ export async function POST(
 
     const review = await prisma.review.create({
       data: {
-        productId: params.id,
+        productId: id,
         userId: session.user.id,
         rating,
         title,
@@ -72,11 +73,12 @@ export async function POST(
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params
     const reviews = await prisma.review.findMany({
-      where: { productId: params.id, isVisible: true },
+      where: { productId: id, isVisible: true },
       include: {
         user: {
           select: { name: true },

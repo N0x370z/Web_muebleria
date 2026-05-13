@@ -20,7 +20,7 @@ const seed = async () => {
   await prisma.banner.deleteMany()
 
   // ── Tags ───────────────────────────────────────────────────────
-  const tags = await Promise.all([
+  await Promise.all([
     prisma.tag.create({ data: { name: 'Nuevo', slug: 'nuevo' } }),
     prisma.tag.create({ data: { name: 'Oferta', slug: 'oferta' } }),
     prisma.tag.create({ data: { name: 'Más Vendido', slug: 'mas-vendido' } }),

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- declaraciones mínimas hasta tipar Stripe en el proyecto */
 declare module '@stripe/stripe-js' {
   export function loadStripe(key: string): Promise<any>;
 }
